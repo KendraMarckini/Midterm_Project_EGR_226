@@ -1088,9 +1088,9 @@ void SetupPort4()
     RS_PORT->SEL0 &=~ RS_PIN;
     RS_PORT->SEL1 &=~ RS_PIN;
     RS_PORT->DIR  |=  RS_PIN;
-    E_PORT->SEL0 &=~ E_PIN;
-    E_PORT->SEL1 &=~ E_PIN;
-    E_PORT->DIR  |=  E_PIN;
+    E_PORT ->SEL0 &=~ E_PIN;
+    E_PORT ->SEL1 &=~ E_PIN;
+    E_PORT ->DIR  |=  E_PIN;
 }
 
 //This function sets up the SysTick Timer used in the program
