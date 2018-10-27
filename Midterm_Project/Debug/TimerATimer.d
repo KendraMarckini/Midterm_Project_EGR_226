@@ -22,7 +22,6 @@ TimerATimer.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/linkag
 TimerATimer.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/abi_prefix.h
 TimerATimer.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/xlocale/_time.h
 TimerATimer.obj: ../TimerATimer.h
-TimerATimer.obj: ../LCDDisplay.h
 
 ../TimerATimer.c: 
 C:/ti/ccsv8/ccs_base/arm/include/msp.h: 
@@ -46,4 +45,3 @@ C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/linkage.h:
 C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/abi_prefix.h: 
 C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/xlocale/_time.h: 
 ../TimerATimer.h: 
-../LCDDisplay.h: 

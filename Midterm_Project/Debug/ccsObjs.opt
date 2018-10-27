@@ -1,1 +1,1 @@
-"./DisplayMenu.obj" "./DoorBellSelection.obj" "./DoorSelection.obj" "./KeyPadInput.obj" "./LCDDisplay.obj" "./LightsSelection.obj" "./MotorSelection.obj" "./TimerATimer.obj" "./main.obj" "./startup_msp432p401r_ccs.obj" "./system_msp432p401r.obj" "../msp432p401r.cmd" -llibc.a 
+"./MidtermMain.obj" "./TimerATimer.obj" "./startup_msp432p401r_ccs.obj" "./system_msp432p401r.obj" -llibc.a 

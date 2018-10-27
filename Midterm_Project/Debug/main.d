@@ -21,14 +21,11 @@ main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/_ti_config.h
 main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/linkage.h
 main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/stdarg.h
 main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/stdlib.h
-main.obj: ../DisplayMenu.h
-main.obj: ../LCDDisplay.h
-main.obj: ../KeyPadInput.h
-main.obj: ../DoorSelection.h
-main.obj: ../MotorSelection.h
+main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/math.h
+main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/_defs.h
+main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/machine/_limits.h
+main.obj: C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/string.h
 main.obj: ../TimerATimer.h
-main.obj: ../LightsSelection.h
-main.obj: ../DoorBellSelection.h
 
 ../main.c: 
 C:/ti/ccsv8/ccs_base/arm/include/msp.h: 
@@ -51,11 +48,8 @@ C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/_ti_config.h:
 C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/linkage.h: 
 C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/stdarg.h: 
 C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/stdlib.h: 
-../DisplayMenu.h: 
-../LCDDisplay.h: 
-../KeyPadInput.h: 
-../DoorSelection.h: 
-../MotorSelection.h: 
+C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/math.h: 
+C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/_defs.h: 
+C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/machine/_limits.h: 
+C:/ti/ccsv8/tools/compiler/ti-cgt-arm_18.1.3.LTS/include/string.h: 
 ../TimerATimer.h: 
-../LightsSelection.h: 
-../DoorBellSelection.h: 
