@@ -135,6 +135,8 @@ void delay_micro(uint32_t us);
 void delay_milli(uint32_t ms);
 void PrintString(char *STRING);
 
+//void Init_ScreenSaver_Timer(void);
+
 enum states{
     Menu1,
     Menu1_Options,
@@ -159,15 +161,14 @@ int main()
     SetupPort4();
     SetupSysTick();
     SetupLCD();
-
     //Initialize keypad
     SetupKeypadPort();
-
     //Init TimerA
     TimerAInit();
-
     //Init Door
     initDoorLEDs();
+    //Init timer for screen saver
+    //Init_ScreenSaver_Timer();
 
     //series of character strings that will be displayed on the LCD
     char String1[] = "______Menu 1____";
@@ -177,13 +178,11 @@ int main()
     char String5[] = "______Menu 2____";
     char String6[] = "3    Lights     ";
     char String7[] = "4     Bell      ";
-    char String8[] = "Push # to scroll";
+    char String8[] = "Push * to scroll";
+
     int keypress = 15;
 
     enum states display = Menu1;
-
-    //cursor invisible
-    ComWrite(0x0C);
     __enable_interrupt();
 
     while(1)
@@ -220,6 +219,7 @@ int main()
 
             case Menu1_Options:
                 keypress = Read_Keypad();
+
                 if(keypress == 1)
                     display = Door;
                 else if(keypress == 2)
@@ -272,7 +272,7 @@ int main()
                     display = Lights;
                 else if(keypress == 4)
                     display = Bell;
-                else if(keypress == 12)
+                else if(keypress == 11)
                     display = Menu1;
                 break;
 
@@ -292,7 +292,115 @@ int main()
         }
     }
 }
+/*
+char Saver1[] = "_";
+char Saver2[] = "|";
 
+void TA2_N_IRQHandler(void)
+{
+   int keypress = 15, i=0;
+   SetupLCD();
+   while (keypress == 15)
+   {
+       //Home Cursor
+       ComWrite(0x02);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver1, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {
+               TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;
+           }
+       }
+       //Move cursor to second line
+       ComWrite(0xC0);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver1, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {
+               TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;
+           }
+       }
+       //Move Cursor to third line
+       ComWrite(0x90);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver1, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
+       }
+       //Moves cursor to the fourth line on LCD
+       ComWrite(0xD0);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver1, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
+       }
+       //Home Cursor
+       ComWrite(0x02);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver2, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
+       }
+       //Move cursor to second line
+       ComWrite(0xC0);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver2, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
+       }
+       //Move Cursor to third line
+       ComWrite(0x90);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver2, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
+       }
+       //Moves cursor to the fourth line on LCD
+       ComWrite(0xD0);
+       for(i=0;i<16;i++)
+       {
+           PrintStringWithLength(Saver2, 1);
+           delay_milli(50);
+           keypress = Read_Keypad();
+           if(keypress != 15)
+           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
+       }
+   }
+}
+
+void Init_ScreenSaver_Timer(void)
+{
+    //screen saver interrupt - ta2.3 P6.6
+    TIMER_A2->CCR[2] = 10000;
+    TIMER_A2->CTL    = TIMER_A_CTL_SSEL__SMCLK |
+                       TIMER_A_CTL_MC__UP      |
+                       TIMER_A_CTL_CLR         |
+                       TIMER_A_CTL_ID_1        |
+                       TIMER_A_CTL_IE;
+    TIMER_A3 -> CCTL[3] = TIMER_A_CCTLN_CCIE;
+}
+*/
 //Bell
 void T32_INT2_IRQHandler()
 {
@@ -538,7 +646,6 @@ void MotorFunction()
 {
     int j=0, KeyPressed = 0, PIN[3]={0};
     float Duty_Cycle = 0;
-
     char Current[] = "";
     char EnterDutyCycle[] = "Enter Duty Cycle";
     char EndInput[]       = "End Input with #";
@@ -555,7 +662,7 @@ void MotorFunction()
     PrintString(EndInput);
     delay_milli(1000);
 
-     while(!(KeyPressed == 12))
+    while(!(KeyPressed == 12))
     {
         //key press detected
         KeyPressed = Read_Keypad();
@@ -577,11 +684,11 @@ void MotorFunction()
             PrintStringWithLength(Current, 1);
             delay_micro(100);
             j++;
-        }
+           }
     }
     //puts the array values as one number and sets it equal to the duty cycle
     Duty_Cycle = PIN[0] + (PIN[1]*10) + (PIN[2]*100);
-    //if statement will run if the user presses "#", the duty cycle was between 0 and 100, and at least 1 digit was entered
+
     if((KeyPressed == 12) && (Duty_Cycle <=100) && (j>0))
     {
         char InputDutyCycle[] ="";
@@ -599,6 +706,8 @@ void MotorFunction()
         PIN[1]=0;
         PIN[2]=0;
         j = 0;
+        delay_milli(100);
+
     }
     //this statement will be true if "#" was pressed and either no digits were entered or the duty cycle was gter than 100
     else if((KeyPressed == 12) && ( (j==0) | (!(Duty_Cycle<=100))))
@@ -607,23 +716,28 @@ void MotorFunction()
         {
             char NotEnter1[] = "A Duty Cycle was";
             char NotEnter2[] = "  not entered.  ";
+            char NotEnter3[] = "Please try again";
             SetupLCD();
             delay_micro(100);
             //prints string on first line on LCD
             PrintString(NotEnter1);
+            delay_micro(100);
+            //prints string on third line on LCD
+            PrintString(NotEnter3);
             delay_micro(100);
             //Moves cursor to the second line on LCD
             ComWrite(0xC0);
             delay_micro(100);
             //Prints string on second line on LCD
             PrintString(NotEnter2);
-            delay_milli(5000);
+            delay_milli(3000);
         }
         if(!(Duty_Cycle<=100))
         {
             char TooLarge1[] = "Duty Cycle is   ";
             char TooLarge2[] = "too big. Must be";
             char TooLarge3[] = "between 0 & 100 ";
+            char TooLarge4[] = "Please try again";
             SetupLCD();
             delay_micro(100);
             //prints string on first line on LCD
@@ -637,22 +751,25 @@ void MotorFunction()
             delay_micro(100);
             //Prints string on second line on LCD
             PrintString(TooLarge2);
-            delay_milli(5000);
+            delay_micro(100);
+            //Prints string on fourth line on LCD
+            PrintString(TooLarge4);
+            delay_milli(3000);
         }
-        //these lines of code will reset the array in this function, along with counter j
-        PIN[0]=0;
-        PIN[1]=0;
-        PIN[2]=0;
-        j = 0;
-        delay_milli(5000);
     }
+    //these lines of code will reset the array in this function, along with counter j
+    PIN[0]=0;
+    PIN[1]=0;
+    PIN[2]=0;
+    j = 0;
+    delay_milli(100);
 }
 
 void chooseDoor()
 {
     int Input = 0;
-    char  Open[] = "1   Open Door   ";
-    char Close[] = "2   Close Door  ";
+    char  Open[] = "1   Close Door  ";
+    char Close[] = "2    Open Door  ";
     enum states door_Case = Door1;
     while (!((Input == 1) | (Input == 2)))
     {
@@ -690,23 +807,23 @@ void chooseDoor()
 
 void changeDoor(int Input)
 {
-    //user want to open door
+    //user want to close door
     if(Input == 1)
     {
-        //turn on GREEN light
-        P2->OUT |=  BIT6;
-        //turn off RED light
-        P2->OUT &= ~BIT5;
+        //turn off GREEN light
+        P2->OUT &=~ BIT6;
+        //turn on RED light
+        P2->OUT |= BIT5;
         //open door = 90 degree change
         //1.5/20
         GetTimeOnForDoor(0.09);
     }
     else if(Input == 2)
     {
-        //turn on RED light
-        P2->OUT |=  BIT5;
-        //turn off GREEN light
-        P2->OUT &= ~BIT6;
+        //turn off RED light
+        P2->OUT &=~ BIT5;
+        //turn on GREEN light
+        P2->OUT |=  BIT6;
         GetTimeOnForDoor(0.05);
     }
 }
@@ -1054,6 +1171,9 @@ void SetupLCD()
     delay_micro(100);
     //increment cursor
     ComWrite(0x06);
+    delay_micro(1000);
+    //Invisible cursor
+    ComWrite(0x0C);
     delay_micro(1000);
 }
 
