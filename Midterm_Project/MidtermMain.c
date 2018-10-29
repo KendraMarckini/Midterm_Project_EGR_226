@@ -3,7 +3,6 @@
  * Class: EGR 226-902
  * Program: Midterm Project!!
  */
-
 //preprocessor directives
 #include "msp.h"
 #include "stdio.h"
@@ -11,7 +10,7 @@
 #include "math.h"
 #include "string.h"
 #include "TimerATimer.h"
-
+//Macros
 #define dotted_half_note    3000000
 #define half_note           2000000
 #define dotted_quarter_note 1500000
@@ -34,43 +33,6 @@
 #define b                   493.88
 #define b_Flat              466.16
 #define MAX_NOTE            33
-
-int note = 0;       //The note in the music sequence we are on
-int breath = 0;     //Take a breath after each note.  This creates seperation
-float music_note_sequence[][2] = {{0,       half_note},
-                                  {b,       quarter_note},
-                                  {e,       dotted_quarter_note},
-                                  {g,       eighth_note},
-                                  {f_Sharp, quarter_note},
-                                  {e,       half_note},
-                                  {Hb,      quarter_note},
-                                  {a,       dotted_half_note},
-                                  {f_Sharp, dotted_half_note},
-                                  {e,       dotted_quarter_note},
-                                  {g,       eighth_note},
-                                  {f_Sharp, quarter_note},
-                                  {d_Sharp, half_note},
-                                  {f,       quarter_note},
-                                  {b,       dotted_half_note},
-                                  {0,       half_note},
-                                  {b,       quarter_note},
-                                  {e,       dotted_quarter_note},
-                                  {g,       eighth_note},
-                                  {f_Sharp, quarter_note},
-                                  {e,       half_note},
-                                  {Hb,      quarter_note},
-                                  {Hd,      half_note},
-                                  {Hd_Flat, quarter_note},
-                                  {Hc,      half_note},
-                                  {a_Flat,  quarter_note},
-                                  {Hc,      dotted_quarter_note},
-                                  {Hb,      eighth_note},
-                                  {Hb_Flat, quarter_note},
-                                  {b_Flat,  half_note},
-                                  {g,       quarter_note},
-                                  {e,       dotted_half_note},
-                                  {0,       dotted_half_note}};
-
 #define DB0_PORT P4
 #define DB0_PIN  BIT0
 #define DB1_PORT P4
@@ -91,7 +53,6 @@ float music_note_sequence[][2] = {{0,       half_note},
 #define RS_PIN  BIT0
 #define E_PORT P3
 #define E_PIN  BIT2
-
 #define ROW0_PORT P3
 #define ROW0_PIN  BIT6
 #define ROW1_PORT P5
@@ -106,22 +67,31 @@ float music_note_sequence[][2] = {{0,       half_note},
 #define COL1_PIN  BIT5
 #define COL2_PORT P5
 #define COL2_PIN  BIT1
-
+//global variables
+int note = 0;
+int breath = 0;
+float music_note_sequence[][2] = {{0, half_note},{b, quarter_note},{e, dotted_quarter_note},
+                                  {g, eighth_note},{f_Sharp, quarter_note},{e, half_note},
+                                  {Hb, quarter_note},{a, dotted_half_note},{f_Sharp, dotted_half_note},
+                                  {e, dotted_quarter_note},{g, eighth_note},{f_Sharp, quarter_note},
+                                  {d_Sharp, half_note},{f, quarter_note},{b, dotted_half_note},
+                                  {0, half_note},{b, quarter_note},{e, dotted_quarter_note},
+                                  {g, eighth_note},{f_Sharp, quarter_note},{e, half_note},
+                                  {Hb, quarter_note},{Hd, half_note},{Hd_Flat, quarter_note},
+                                  {Hc, half_note},{a_Flat, quarter_note},{Hc, dotted_quarter_note},
+                                  {Hb, eighth_note},{Hb_Flat, quarter_note},{b_Flat, half_note},
+                                  {g, quarter_note},{e, dotted_half_note},{0, dotted_half_note}};
+//prototypes
 void SetupTimer32s();
-
 void ControlBrightness(int LED_Color);
 void ChooseLED();
-
 void MotorFunction();
-
 void initDoorLEDs();
 void changeDoor(int Input);
 void chooseDoor();
-
 int Read_Keypad();
 void reset_function(void);
 void SetupKeypadPort(void);
-
 void PrintStringWithLength(char *STRING, int size);
 void SetupPort4();
 void SetupSysTick(void);
@@ -134,17 +104,10 @@ void PulseE();
 void delay_micro(uint32_t us);
 void delay_milli(uint32_t ms);
 void PrintString(char *STRING);
-
-//void Init_ScreenSaver_Timer(void);
-
+//switch case states
 enum states{
-    Menu1,
-    Menu1_Options,
-    Menu2,
-    Menu2_Options,
-    LightsMenu,
-    SelectLED,
-    Door,
+    Menu1,Menu1_Options,Menu2,Menu2_Options,
+    LightsMenu,SelectLED,Door,
     Motor,
     Bell,
     Lights,
@@ -167,8 +130,11 @@ int main()
     TimerAInit();
     //Init Door
     initDoorLEDs();
-    //Init timer for screen saver
-    //Init_ScreenSaver_Timer();
+    //turn on red led
+    P2->OUT |= BIT5;
+
+    NVIC_EnableIRQ(T32_INT1_IRQn);
+
 
     //series of character strings that will be displayed on the LCD
     char String1[] = "______Menu 1____";
@@ -213,13 +179,12 @@ int main()
                 //print string 2 on second line of LCD
                 PrintString(String4);
                 //short delay so that program does not over step in the program
-                delay_micro(1000);
+                delay_micro(100);
                 display = Menu1_Options;
                 break;
 
             case Menu1_Options:
                 keypress = Read_Keypad();
-
                 if(keypress == 1)
                     display = Door;
                 else if(keypress == 2)
@@ -245,24 +210,24 @@ int main()
                 ComWrite(0x02);
                 PrintString(String5);
                 //short delay so that program does not over step in the program
-                delay_micro(1000);
+                delay_micro(100);
                 //Moves cursor to the second line on LCD
                 ComWrite(0xC0);
                 //print string 2 on second line of LCD
                 PrintString(String6);
                 //short delay so that program does not over step in the program
-                delay_micro(1000);
+                delay_micro(100);
                 //Moves cursor to the third line on LCD
                 ComWrite(0x90);
                 PrintString(String7);
                 //short delay so that program does not over step in the program
-                delay_micro(1000);
+                delay_micro(100);
                 //Moves cursor to the fourth line on LCD
                 ComWrite(0xD0);
                 //print string 2 on second line of LCD
                 PrintString(String8);
                 //short delay so that program does not over step in the program
-                delay_micro(1000);
+                delay_micro(100);
                 display = Menu2_Options;
                 break;
 
@@ -292,115 +257,7 @@ int main()
         }
     }
 }
-/*
-char Saver1[] = "_";
-char Saver2[] = "|";
 
-void TA2_N_IRQHandler(void)
-{
-   int keypress = 15, i=0;
-   SetupLCD();
-   while (keypress == 15)
-   {
-       //Home Cursor
-       ComWrite(0x02);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver1, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {
-               TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;
-           }
-       }
-       //Move cursor to second line
-       ComWrite(0xC0);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver1, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {
-               TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;
-           }
-       }
-       //Move Cursor to third line
-       ComWrite(0x90);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver1, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
-       }
-       //Moves cursor to the fourth line on LCD
-       ComWrite(0xD0);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver1, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
-       }
-       //Home Cursor
-       ComWrite(0x02);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver2, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
-       }
-       //Move cursor to second line
-       ComWrite(0xC0);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver2, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
-       }
-       //Move Cursor to third line
-       ComWrite(0x90);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver2, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
-       }
-       //Moves cursor to the fourth line on LCD
-       ComWrite(0xD0);
-       for(i=0;i<16;i++)
-       {
-           PrintStringWithLength(Saver2, 1);
-           delay_milli(50);
-           keypress = Read_Keypad();
-           if(keypress != 15)
-           {TIMER_A3 -> CCTL[3] &=~ TIMER_A_CCTLN_CCIFG;}
-       }
-   }
-}
-
-void Init_ScreenSaver_Timer(void)
-{
-    //screen saver interrupt - ta2.3 P6.6
-    TIMER_A2->CCR[2] = 10000;
-    TIMER_A2->CTL    = TIMER_A_CTL_SSEL__SMCLK |
-                       TIMER_A_CTL_MC__UP      |
-                       TIMER_A_CTL_CLR         |
-                       TIMER_A_CTL_ID_1        |
-                       TIMER_A_CTL_IE;
-    TIMER_A3 -> CCTL[3] = TIMER_A_CCTLN_CCIE;
-}
-*/
 //Bell
 void T32_INT2_IRQHandler()
 {
@@ -427,7 +284,6 @@ void T32_INT2_IRQHandler()
         note = note + 1;                                                //Next note
         if(note >= MAX_NOTE) {                                          //Go back to the beginning if at the end
             note = 0;
-            TIMER32_1->CONTROL = 0b11000011;                //Sets timer 1 for Enabled, Periodic, No Interrupt, No Prescaler, 32 bit mode, One Shot Mode.  See 589 of the reference manual
             TIMER32_2->CONTROL = 0b11000011;                //Sets timer 2 for Enabled, Periodic, With Interrupt, No Prescaler, 32 bit mode, One Shot Mode.  See 589 of the reference manual
         }
         breath = 1;                                             //Next time through should be a breath for separation.
@@ -446,7 +302,6 @@ void SetupTimer32s()
     P5->SEL1 &=~ (BIT6);  //setup pwm pin
     P5->DIR  |=  (BIT6);  //pwd pin as output
 
-    TIMER32_1->CONTROL = 0b11000011;                //Sets timer 1 for Enabled, Periodic, No Interrupt, No Prescaler, 32 bit mode, One Shot Mode.  See 589 of the reference manual
     TIMER32_2->CONTROL = 0b11100011;                //Sets timer 2 for Enabled, Periodic, With Interrupt, No Prescaler, 32 bit mode, One Shot Mode.  See 589 of the reference manual
     NVIC_EnableIRQ(T32_INT2_IRQn);                  //Enable Timer32_2 interrupt.  Look at msp.h if you want to see what all these are called.
     TIMER32_2->LOAD = 3000000 - 1;                  //Set to a count down of 1 second on 3 MHz clock
@@ -611,7 +466,7 @@ void ControlBrightness(int LED_Color)
                 delay_micro(100);
                 //Prints string on second line on LCD
                 PrintString(ReEnter2);
-                delay_milli(1000);
+                delay_milli(100);
             }
             if(!(Brightness<=100))
             {
@@ -632,7 +487,7 @@ void ControlBrightness(int LED_Color)
                 delay_micro(100);
                 //Prints string on second line on LCD
                 PrintString(TooLarge2);
-                delay_milli(1000);
+                delay_milli(100);
             }
             //these lines of code will reset the array in this function, along with counter j
             PIN[0]=0;
@@ -660,7 +515,7 @@ void MotorFunction()
     delay_micro(100);
     //print string to second line on LCD
     PrintString(EndInput);
-    delay_milli(1000);
+    delay_milli(100);
 
     while(!(KeyPressed == 12))
     {
@@ -762,7 +617,6 @@ void MotorFunction()
     PIN[1]=0;
     PIN[2]=0;
     j = 0;
-    delay_milli(100);
 }
 
 void chooseDoor()
@@ -1171,10 +1025,10 @@ void SetupLCD()
     delay_micro(100);
     //increment cursor
     ComWrite(0x06);
-    delay_micro(1000);
+    delay_micro(100);
     //Invisible cursor
     ComWrite(0x0C);
-    delay_micro(1000);
+    delay_micro(100);
 }
 
 //This function sets up the ports for keypad
