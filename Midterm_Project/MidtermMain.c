@@ -2,7 +2,8 @@
  * Date: 10/16/2018
  * Class: EGR 226-902
  * Program: Midterm Project!!
- */
+ * Note: some code was used from Zuidema, Brakora and possibly Kandalaft*/
+
 //preprocessor directives
 #include "msp.h"
 #include "stdio.h"
@@ -89,7 +90,7 @@ void MotorFunction();
 void initDoorLEDs();
 void changeDoor(int Input);
 void chooseDoor();
-int Read_Keypad();
+int  Read_Keypad();
 void reset_function(void);
 void SetupKeypadPort(void);
 void PrintStringWithLength(char *STRING, int size);
@@ -119,7 +120,8 @@ int main()
 {
     //stop watchdog timer
     WDT_A->CTL = WDT_A_CTL_PW | WDT_A_CTL_HOLD;
-
+    //turn off interrupts
+    __disable_interrupt();
     //initialize LCD
     SetupPort4();
     SetupSysTick();
@@ -132,10 +134,8 @@ int main()
     initDoorLEDs();
     //turn on red led
     P2->OUT |= BIT5;
-
+    //enables Timer 32 1 Flag
     NVIC_EnableIRQ(T32_INT1_IRQn);
-
-
     //series of character strings that will be displayed on the LCD
     char String1[] = "______Menu 1____";
     char String2[] = "1     Door      ";
@@ -145,14 +145,15 @@ int main()
     char String6[] = "3    Lights     ";
     char String7[] = "4     Bell      ";
     char String8[] = "Push * to scroll";
-
+    //variable for returning button press
     int keypress = 15;
-
+    //switch case "display" will start in Menu1
     enum states display = Menu1;
+    //turn on interrupts
     __enable_interrupt();
-
     while(1)
     {
+        //"display" switch
         switch (display)
         {
             case Menu1:
@@ -160,30 +161,33 @@ int main()
                 SetupLCD();
                 //home cursor
                 ComWrite(0x02);
+                delay_micro(100);
+                //print to first line of LCD
                 PrintString(String1);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
                 //Moves cursor to the second line on LCD
                 ComWrite(0xC0);
+                delay_micro(100);
                 //print string 2 on second line of LCD
                 PrintString(String2);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
                 //Moves cursor to the third line on LCD
                 ComWrite(0x90);
+                delay_micro(100);
+                //print third string
                 PrintString(String3);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
                 //Moves cursor to the fourth line on LCD
                 ComWrite(0xD0);
+                delay_micro(100);
                 //print string 2 on second line of LCD
                 PrintString(String4);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
+                //change state
                 display = Menu1_Options;
                 break;
-
             case Menu1_Options:
+                //read the button pressed
                 keypress = Read_Keypad();
                 if(keypress == 1)
                     display = Door;
@@ -192,46 +196,47 @@ int main()
                 else if(keypress == 11)
                     display = Menu2;
                 break;
-
             case Door:
                 chooseDoor();
                 display = Menu1;
                 break;
-
             case Motor:
                 MotorFunction();
                 display = Menu1;
                 break;
-
             case Menu2:
                 //reconfigure LCD to original settings
                 SetupLCD();
+                delay_micro(100);
                 //home cursor
                 ComWrite(0x02);
+                delay_micro(100);
+                //print to first line of LCD
                 PrintString(String5);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
                 //Moves cursor to the second line on LCD
                 ComWrite(0xC0);
+                delay_micro(100);
                 //print string 2 on second line of LCD
                 PrintString(String6);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
                 //Moves cursor to the third line on LCD
                 ComWrite(0x90);
+                delay_micro(100);
+                //print third string
                 PrintString(String7);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
                 //Moves cursor to the fourth line on LCD
                 ComWrite(0xD0);
-                //print string 2 on second line of LCD
-                PrintString(String8);
-                //short delay so that program does not over step in the program
                 delay_micro(100);
+                //print string on second line of LCD
+                PrintString(String8);
+                delay_micro(100);
+                //switch case
                 display = Menu2_Options;
                 break;
-
             case Menu2_Options:
+                //read button press
                 keypress = Read_Keypad();
                 if(keypress == 3)
                     display = Lights;
@@ -240,17 +245,14 @@ int main()
                 else if(keypress == 11)
                     display = Menu1;
                 break;
-
             case Lights:
                 ChooseLED();
                 display = Menu2;
                 break;
-
             case Bell:
                 SetupTimer32s();
                 display = Menu2;
                 break;
-
             default:
                 display = Menu1;
                 break;
@@ -290,44 +292,48 @@ void T32_INT2_IRQHandler()
     }
 }
 
+//bell interrupt
 void TA0_N_IRQHandler()
 {
     //If CCTL1 is the reason for the interrupt (BIT0 holds the flag)
     if(TIMER_A2->CCTL[1] & BIT0){}
 }
 
+//init Timer32
 void SetupTimer32s()
 {
     P5->SEL0 |=  (BIT6);  //setup pwm pin
     P5->SEL1 &=~ (BIT6);  //setup pwm pin
     P5->DIR  |=  (BIT6);  //pwd pin as output
-
     TIMER32_2->CONTROL = 0b11100011;                //Sets timer 2 for Enabled, Periodic, With Interrupt, No Prescaler, 32 bit mode, One Shot Mode.  See 589 of the reference manual
     NVIC_EnableIRQ(T32_INT2_IRQn);                  //Enable Timer32_2 interrupt.  Look at msp.h if you want to see what all these are called.
     TIMER32_2->LOAD = 3000000 - 1;                  //Set to a count down of 1 second on 3 MHz clock
-
     TIMER_A2->CCR[0] = 0;                           // Turn off timerA to start
     TIMER_A2->CCTL[1] = 0b0000000011110100;         // Setup Timer A0_1 Reset/Set, Interrupt, No Output
     TIMER_A2->CCR[1] = 0;                           // Turn off timerA to start
     TIMER_A2->CCR[2] = 0;                           // Turn off timerA to start
     TIMER_A2->CTL = 0b0000001000010100;             // Count Up mode using SMCLK, Clears, Clear Interrupt Flag
-
     NVIC_EnableIRQ(TA0_N_IRQn);                     // Enable interrupts for CCTL1-6 (if on)
 }
 
+//function allows user to choose which LED they want to turn on
 void ChooseLED()
 {
+    //init LCD
     SetupLCD();
     delay_micro(100);
+    //define variables
     char sentence[]=  "  Choose an LED ";
     char      Red[]=  "1      Red      ";
     char    Green[]=  "2     Green     ";
     char     Blue[]=  "3      Blue     ";
     int SelectedLED = 0;
+    //first case in switch
     enum states lights = LightsMenu;
-
+    //while 1, 2, or 3 are not pressed from the Keypad
     while((SelectedLED == 0) | (SelectedLED > 3))
     {
+        //switch case for LEDs
         switch(lights)
         {
             case LightsMenu:
@@ -338,6 +344,7 @@ void ChooseLED()
                 delay_micro(100);
                 //Prints string on third line on LCD
                 PrintString(Green);
+                delay_micro(100);
                 //Moves cursor to the second line on LCD
                 ComWrite(0xC0);
                 delay_micro(100);
@@ -349,7 +356,6 @@ void ChooseLED()
                 delay_milli(100);
                 lights = SelectLED;
                 break;
-
             case SelectLED:
                 SelectedLED = Read_Keypad();
                 //if red
@@ -378,16 +384,23 @@ void ChooseLED()
     }
 }
 
+//function allows user to control the duty cycle or brightness of the LEDs
 void ControlBrightness(int LED_Color)
 {
+    //define variables
     int j=0, KeyPressed = 0, PIN[3]={0};
     float Brightness = 0;
-
     char Current[] = "";
     char Brightness1[] = "Enter brightness";
     char Brightness2[] = "between 0 & 100 ";
     char Brightness3[] = "End Input with #";
-
+    char InputBrightness[] ="";
+    int length = 0;
+    char ReEnter1[] = "A Brightness was";
+    char ReEnter2[] = "  not entered.  ";
+    char TooLarge1[] = " Brightness is  ";
+    char TooLarge2[] = "too big. Must be";
+    char TooLarge3[] = "between 0 & 100 ";
     SetupLCD();
     delay_micro(100);
     //prints first line on LCD
@@ -401,8 +414,8 @@ void ControlBrightness(int LED_Color)
     delay_micro(100);
     //Prints second line on LCD
     PrintString(Brightness2);
-    delay_milli(100);
-
+    delay_micro(100);
+    //while loop runs until the user is finished with input by pressing "#" or button 12
     while(!(KeyPressed == 12))
     {
         //key press detected
@@ -418,10 +431,13 @@ void ControlBrightness(int LED_Color)
             PIN[0]= KeyPressed;
             if(j == 0)
             {
+                //reset up the lCD so it can display current input
                 SetupLCD();
                 delay_micro(100);
             }
+            //place current input into an array
             sprintf(Current, "%d", KeyPressed);
+            //print the current array / current input
             PrintStringWithLength(Current, 1);
             delay_micro(100);
             j++;
@@ -432,15 +448,16 @@ void ControlBrightness(int LED_Color)
         //if statement will run if the user presses "#", the duty cycle was between 0 and 100, and at least 1 digit was entered
         if((KeyPressed == 12) && (Brightness <=100) && (j>0))
         {
-            char InputBrightness[] ="";
-            int length = 0;
+            //put the users input into an array
             sprintf(InputBrightness, "Brightness: %0.0f", Brightness);
+            //get length of the array
             length = strlen(InputBrightness);
             SetupLCD();
             delay_micro(100);
+            //call function to print the array to the LCD
             PrintStringWithLength(InputBrightness, length);
             delay_milli(1500);
-            //call to MotorTimer.h
+            //this function will turn the LED on
             GetTimeOnForLights(Brightness, LED_Color);
             //these lines of code will reset the array in this function, along with counter j
             PIN[0]=0;
@@ -451,11 +468,9 @@ void ControlBrightness(int LED_Color)
         //this statement will be true if "#" was pressed and either no digits were entered or the duty cycle was gter than 100
         else if((KeyPressed == 12) && ( (j==0) | (!(Brightness<=100))))
         {
+            //if user did not input anything, let user know
             if(j==0)
             {
-                char ReEnter1[] = "A Brightness was";
-                char ReEnter2[] = "  not entered.  ";
-
                 SetupLCD();
                 delay_micro(100);
                 //prints string on first line on LCD
@@ -466,14 +481,11 @@ void ControlBrightness(int LED_Color)
                 delay_micro(100);
                 //Prints string on second line on LCD
                 PrintString(ReEnter2);
-                delay_milli(100);
+                delay_milli(3000);
             }
+            //if user input is too large, let user know
             if(!(Brightness<=100))
             {
-                char TooLarge1[] = " Brightness is  ";
-                char TooLarge2[] = "too big. Must be";
-                char TooLarge3[] = "between 0 & 100 ";
-
                 SetupLCD();
                 delay_micro(100);
                 //prints string on first line on LCD
@@ -487,7 +499,7 @@ void ControlBrightness(int LED_Color)
                 delay_micro(100);
                 //Prints string on second line on LCD
                 PrintString(TooLarge2);
-                delay_milli(100);
+                delay_milli(3000);
             }
             //these lines of code will reset the array in this function, along with counter j
             PIN[0]=0;
@@ -497,14 +509,24 @@ void ControlBrightness(int LED_Color)
         }
 }
 
+//this function allows the user to input the duty cycle
 void MotorFunction()
 {
+    //define variables
     int j=0, KeyPressed = 0, PIN[3]={0};
     float Duty_Cycle = 0;
     char Current[] = "";
     char EnterDutyCycle[] = "Enter Duty Cycle";
     char EndInput[]       = "End Input with #";
-
+    char InputDutyCycle[] ="";
+    int length = 0;
+    char NotEnter1[] = "A Duty Cycle was";
+    char NotEnter2[] = "  not entered.  ";
+    char NotEnter3[] = "Please try again";
+    char TooLarge1[] = "Duty Cycle is   ";
+    char TooLarge2[] = "too big. Must be";
+    char TooLarge3[] = "between 0 & 100 ";
+    char TooLarge4[] = "Please try again";
     SetupLCD();
     delay_micro(100);
     //print string to first line on LCD
@@ -515,8 +537,8 @@ void MotorFunction()
     delay_micro(100);
     //print string to second line on LCD
     PrintString(EndInput);
-    delay_milli(100);
-
+    delay_micro(100);
+    //while the user is still adding input
     while(!(KeyPressed == 12))
     {
         //key press detected
@@ -532,10 +554,13 @@ void MotorFunction()
             PIN[0]= KeyPressed;
             if(j == 0)
             {
+                //reset the LCD to display current input
                 SetupLCD();
                 delay_micro(100);
             }
+            //Place the users input into an array
             sprintf(Current, "%d", KeyPressed);
+            //print the users current input
             PrintStringWithLength(Current, 1);
             delay_micro(100);
             j++;
@@ -543,35 +568,32 @@ void MotorFunction()
     }
     //puts the array values as one number and sets it equal to the duty cycle
     Duty_Cycle = PIN[0] + (PIN[1]*10) + (PIN[2]*100);
-
+    //if the "#" key was pressed, and the duty cycle is less than 100%
     if((KeyPressed == 12) && (Duty_Cycle <=100) && (j>0))
     {
-        char InputDutyCycle[] ="";
-        int length = 0;
+        //place the duty cycle into an array
         sprintf(InputDutyCycle, " Duty Cycle: %0.0f", Duty_Cycle);
+        //get length of the array
         length = strlen(InputDutyCycle);
         SetupLCD();
         delay_micro(100);
+        //print users input to LCD
         PrintStringWithLength(InputDutyCycle, length);
-        delay_milli(1500);
-        //call to MotorTimer.h
+        delay_milli(100);
+        //function used to control the motor
         GetTimeOnForMotor(Duty_Cycle);
         //these lines of code will reset the array in this function, along with counter j
         PIN[0]=0;
         PIN[1]=0;
         PIN[2]=0;
         j = 0;
-        delay_milli(100);
-
     }
-    //this statement will be true if "#" was pressed and either no digits were entered or the duty cycle was gter than 100
+    //if "#" is pressed and either no digits were entered or the duty cycle was greater than 100
     else if((KeyPressed == 12) && ( (j==0) | (!(Duty_Cycle<=100))))
     {
+        //if no input
         if(j==0)
         {
-            char NotEnter1[] = "A Duty Cycle was";
-            char NotEnter2[] = "  not entered.  ";
-            char NotEnter3[] = "Please try again";
             SetupLCD();
             delay_micro(100);
             //prints string on first line on LCD
@@ -587,12 +609,9 @@ void MotorFunction()
             PrintString(NotEnter2);
             delay_milli(3000);
         }
+        //if duty cycle is greater than 100
         if(!(Duty_Cycle<=100))
         {
-            char TooLarge1[] = "Duty Cycle is   ";
-            char TooLarge2[] = "too big. Must be";
-            char TooLarge3[] = "between 0 & 100 ";
-            char TooLarge4[] = "Please try again";
             SetupLCD();
             delay_micro(100);
             //prints string on first line on LCD
@@ -619,12 +638,16 @@ void MotorFunction()
     j = 0;
 }
 
+//this function asks the user if they would like to open or close the garage door
 void chooseDoor()
 {
+    //define variables
     int Input = 0;
     char  Open[] = "1   Close Door  ";
     char Close[] = "2    Open Door  ";
+    //set first case in switch
     enum states door_Case = Door1;
+    //loop runs until user inputs either 1 or 2
     while (!((Input == 1) | (Input == 2)))
     {
         switch(door_Case)
@@ -643,22 +666,21 @@ void chooseDoor()
                 delay_micro(100);
                 door_Case = Door2;
                 break;
-
             case Door2:
+                //read keypad
                 Input = Read_Keypad();
+                //if user wants to close the door
                 if(Input == 1)
-                {
                     changeDoor(Input);
-                }
+                //if user wants to open the door
                 if(Input == 2)
-                {
                     changeDoor(Input);
-                }
                 break;
         }
     }
 }
 
+//this function powers the servo to change the door
 void changeDoor(int Input)
 {
     //user want to close door
@@ -668,21 +690,22 @@ void changeDoor(int Input)
         P2->OUT &=~ BIT6;
         //turn on RED light
         P2->OUT |= BIT5;
-        //open door = 90 degree change
-        //1.5/20
+        //function call to change servo position
         GetTimeOnForDoor(0.09);
     }
+    //user wants to open the door
     else if(Input == 2)
     {
         //turn off RED light
         P2->OUT &=~ BIT5;
         //turn on GREEN light
         P2->OUT |=  BIT6;
+        //function call to change servo position
         GetTimeOnForDoor(0.05);
     }
 }
 
-//init LEDs in this program
+//initializae the garage door LEDs
 void initDoorLEDs()
 {
     P2->SEL0 &= ~(BIT5|BIT6);
@@ -691,6 +714,7 @@ void initDoorLEDs()
     P2->OUT  &= ~(BIT5|BIT6);
 }
 
+//function reads button press and returns the button pressed
 int Read_Keypad()
 {
     //define variables
@@ -814,7 +838,7 @@ int Read_Keypad()
     return button;
 }
 
-//Reset function
+//Reset function - resets all columns and rows to their initialization state
 void reset_function(void)
 {
     ROW0_PORT->DIR &=~ ROW0_PIN;
@@ -833,7 +857,7 @@ void reset_function(void)
     COL2_PORT->OUT |=  COL2_PIN;
 }
 
-//This function sets up the ports for keypad
+//Function sets up the pins for keypad as GPIO
 void SetupKeypadPort(void)
 {
     ROW0_PORT->SEL0 &=~ ROW0_PIN;
@@ -1031,7 +1055,7 @@ void SetupLCD()
     delay_micro(100);
 }
 
-//This function sets up the ports for keypad
+//This function sets up the pins for the LCD
 void SetupPort4()
 {
     //DB0=BIT0, DB1=BIT1, DB2=BIT2, DB3=BIT3, DB4=BIT4, DB5=BIT5, DB6=BIT6, DB7=BIT7
